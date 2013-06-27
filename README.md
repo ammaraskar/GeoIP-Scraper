@@ -8,6 +8,8 @@ Turn your log files containing IP addresses into a pretty little represantation 
 
 How To Use
 =========
+(make sure you have python, ya know, since this runs on python)
+
 
 First off, run ``pip install -r requirements.txt`` to install the external dependencies required.
 

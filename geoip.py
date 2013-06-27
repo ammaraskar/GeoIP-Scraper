@@ -20,7 +20,7 @@ class DownloadThread(threading.Thread):
         f = open(file_name, 'wb')
         meta = u.info()
         file_size = int(meta.getheaders("Content-Length")[0])
-        print "Downloading: %s Bytes: %s" % (file_name, file_size)
+        print("Downloading: %s Bytes: %s" % (file_name, file_size))
 
         file_size_dl = 0
         block_sz = 8192
@@ -43,7 +43,7 @@ class DownloadThread(threading.Thread):
                 last_perc = percentage
                 print status
 
-        print "GeoIP file downloaded, extracting."
+        print("GeoIP file downloaded, extracting.")
         f.close()
         f = gzip.open(file_name, 'rb')
         with open('GeoIPCity.dat', 'wb') as out:
@@ -89,7 +89,7 @@ def main():
     if downloadThread:
         downloadThread.join()
 
-    print "Detected " + str(len(IPs)) + " IP address(es)"
+    print("Detected " + str(len(IPs)) + " IP address(es)")
 
     gi = pygeoip.GeoIP('GeoIPCity.dat', pygeoip.const.MEMORY_CACHE)
     data = []
@@ -107,7 +107,7 @@ def main():
         done += 1
         percentage = done * 100. / total
         if percentage - last_perc > 5:
-            print ("%.1f" % percentage) + "% IPs processed"
+            print(("%.1f" % percentage) + "% IPs processed")
             last_perc = percentage
 
     with open('web/data.json', 'w+') as dataFile:

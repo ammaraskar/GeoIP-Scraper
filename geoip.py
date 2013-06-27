@@ -7,7 +7,6 @@ import pygeoip
 progress_bar_space = 35
 url = "http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
 
-ips = set()
 
 class DownloadThread(threading.Thread):
 
@@ -52,53 +51,53 @@ class DownloadThread(threading.Thread):
         f.close()
 
 
-def scrape_file(IPFile):
+def scrape_file(IPFile, IPs):
     with open(IPFile) as IPFile:
         for line in IPFile:
-            extract_ip(line)
+            extract_ip(line, IPs)
 
 
 # If there is an ip in this line, it'll be added to the collection
-def extract_ip(line):
+def extract_ip(line, IPs):
     match = re.findall( r'[0-9]+(?:\.[0-9]+){3}', line)
     if len(match) > 0:
-        global ips
-        ips |= set(match)
+        IPs |= set(match)
 
 
-def detect_string(string):
+def detect_string(string, IPs):
     if os.path.exists(string):
-        scrape_file(string)
+        scrape_file(string, IPs)
     else:
-        extract_ip(string)
+        extract_ip(string, IPs)
 
 
 def main():
+    IPs = set()
 
-    downloadThread = False
+    downloadThread = None
     if not os.path.exists("GeoIPCity.dat"):
         downloadThread = DownloadThread()
         downloadThread.start()
 
     if not sys.stdin.isatty():
         for line in sys.stdin:
-            detect_string(line)
+            detect_string(line, IPs)
 
     for arg in sys.argv[1:]:
-        detect_string(arg)
+        detect_string(arg, IPs)
         
     if downloadThread:
         downloadThread.join()
 
-    print "Detected " + str(len(ips)) + " IP address(es)"
+    print "Detected " + str(len(IPs)) + " IP address(es)"
 
     gi = pygeoip.GeoIP('GeoIPCity.dat', pygeoip.const.MEMORY_CACHE)
     data = []
 
     last_perc = -5
-    total = len(ips)
+    total = len(IPs)
     done = 0
-    for ip in ips:
+    for ip in IPs:
         try:
             info = gi.record_by_addr(ip)
             data.append({'lat' : info['latitude'],

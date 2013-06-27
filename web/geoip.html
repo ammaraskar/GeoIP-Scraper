@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map-canvas { height: 100% }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5Z1N5fvldCx1tM0MMVljHygFCuFjvpaM&sensor=false">
+    </script>
+    <script type="text/javascript" src="markerclusterer.js"></script>
+    <script type="text/javascript" src="data.json"></script>
+    <script type="text/javascript">
+      function initialize() {
+        var mapOptions = {
+          center: new google.maps.LatLng(29.382175,-18.132935),
+          zoom: 3,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById("map-canvas"),
+            mapOptions);
+
+        var markers = [];
+        for (var i = 0; i < data.length; i++) {
+          var loc = data[i];
+          if (loc.lat && loc.long) {
+            var latLng = new google.maps.LatLng(loc.lat, loc.long);
+            var marker = new google.maps.Marker({'position': latLng});
+            markers.push(marker);
+          }
+        }
+        var markerCluster = new MarkerClusterer(map, markers);
+      }
+      google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"/>
+  </body>
+</html>

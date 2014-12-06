@@ -37,3 +37,6 @@ nosetests.xml
 # Geoip stuff
 GeoIPCity.dat
 GeoLiteCity.dat.gz
+
+# Web
+web/data.json

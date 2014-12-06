@@ -28,7 +28,9 @@ class DownloadThread(threading.Thread):
         while True:
             buffer = u.read(block_sz)
             if not buffer:
+                sys.stdout.write("\n")
                 break
+
             file_size_dl += len(buffer)
             f.write(buffer)
 
@@ -41,7 +43,10 @@ class DownloadThread(threading.Thread):
                 status = "%.1f%% [%s%s]" % (percentage, "=" * characters, " " * deficit)
 
                 last_perc = percentage
-                print status
+
+                # Print with \r (carriage return) to overwrite previous line
+                sys.stdout.write("%s\r" % status)
+                sys.stdout.flush()
 
         print("GeoIP file downloaded, extracting.")
         f.close()
@@ -107,8 +112,14 @@ def main():
         done += 1
         percentage = done * 100. / total
         if percentage - last_perc > 5:
-            print(("%.1f" % percentage) + "% IPs processed")
+            status = ("%.1f" % percentage) + "% IPs processed"
+
+            sys.stdout.write("%s\r" % status)
+            sys.stdout.flush()
+
             last_perc = percentage
+
+    sys.stdout.write("\n")
 
     with open('web/data.json', 'w+') as dataFile:
         dataFile.write("var data = ")

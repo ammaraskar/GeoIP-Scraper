@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      html { height: 100%; }
+      body { height: 100%; margin: 0; padding: 0; overflow: hidden; background-color: #404040; }
+      #map-canvas { height: 100%; position: relative; }
+    </style>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+    <script type="text/javascript" src="datamaps.world.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.1.1/randomColor.min.js"></script>
+
+    <script type="text/javascript" src="data.json"></script>
+    <script type="text/javascript">
+    function getRandom(arr, n) {
+        var result = new Array(n),
+            len = arr.length,
+            taken = new Array(len);
+        if (n > len)
+            throw new RangeError("getRandom: more elements taken than available");
+        while (n--) {
+            var x = Math.floor(Math.random() * len);
+            result[n] = arr[x in taken ? taken[x] : x];
+            taken[x] = --len;
+        }
+        return result;
+    }
+
+    function initialize() {
+    	// Replace this with your own server's location
+        var SERVER_LOCATION = {
+            lat: '32.77',
+            lon: '-96.80'
+        };
+        var map = new Datamap({
+            element: document.getElementById("map-canvas"),
+
+            fills: {
+                defaultFill: '#A0A0A0',
+            },
+
+            geographyConfig: {
+                borderColor: '#404040',
+                highlightFillColor: '#A8A8A8',
+                highlightBorderColor: '#404040',
+            },
+        });
+        window.map = map;
+
+        // Consolidate the cordinates so we have lesser number of starting nodes.
+        // Start off by rounding off each cordinate, loses some precision but ehhh
+        for (var i = 0; i < data.length; i++) {
+            var loc = data[i];
+            loc.lat = Math.round(loc.lat);
+            loc.long = Math.round(loc.long);
+        }
+
+        // key latitude, value array of longitudes at that latitude
+        var consolidatedData = {};
+        for (var i = 0; i < data.length; i++) {
+            var loc = data[i];
+            if (!consolidatedData.hasOwnProperty(loc.lat)) {
+                consolidatedData[loc.lat] = [];
+            } 
+            if (consolidatedData[loc.lat].indexOf(loc.long) === -1) {
+            	consolidatedData[loc.lat].push(loc.long);
+            }
+        }
+
+        // Removes other nodes +-4 latitude and +-5 longitude
+        // within each other
+        for (lat in consolidatedData) {
+            if (!consolidatedData.hasOwnProperty(lat)) {
+                continue;
+            }
+            lat = parseInt(lat);
+
+            var longitudes = consolidatedData[lat];
+            for (var i = 0; i < longitudes.length; i++) {
+                var longitude = parseInt(longitudes[i]);
+
+                for (var j = -4; j <= 4; j++) {
+                    if (consolidatedData.hasOwnProperty(lat + j)) {
+                    	var longitudesInRange = consolidatedData[lat + j];
+                    	for (var k = 0; k < longitudesInRange.length; k++) {
+                    		// don't remove ourselves
+                    		if ((lat + j) == lat && longitudesInRange[k] == longitude) {
+                    			continue;
+                    		}
+                    		if (Math.abs(longitudesInRange[k] - longitude) <= 5) {
+                    			delete longitudesInRange[k];
+                    		}
+                    	}
+                    }
+                }
+            }
+        }
+        
+        // Convert the data back into the proper [{lat: 'bla', long: 'bla'}, ..] format
+        var minimizedCordinates = [];
+        for (lat in consolidatedData) {
+            if (!consolidatedData.hasOwnProperty(lat)) {
+                continue;
+            }
+            var longitudes = consolidatedData[lat];
+            lat = parseInt(lat);
+            for (var i = 0; i < longitudes.length; i++) {
+            	if (!isNaN(longitudes[i])) {
+            		minimizedCordinates.push({
+            			'lat': lat,
+            			'long': parseInt(longitudes[i])
+            		});
+            	}
+            }
+        }
+
+        // Generate the little blob representing the server
+        map.bubbles([{
+            name: 'Server',
+            latitude: SERVER_LOCATION.lat,
+            longitude: SERVER_LOCATION.lon,
+            radius: 10,
+        }]);
+
+        // draw the arcs, rotating the data every 2 seconds
+        (function drawArcs(){
+        	map.arc([]);
+
+        	var numberOfNodes = 25;
+        	if (minimizedCordinates.length < numberOfNodes) {
+        		numberOfNodes = minimizedCordinates.length;
+        	}
+        	var randomData = getRandom(minimizedCordinates, numberOfNodes);
+
+        	var arcData = [];
+        	for (var i = 0; i < randomData.length; i++) {
+        		var location = randomData[i];
+        		arcData.push({
+        		    origin: {
+        		        latitude: location.lat,
+        		        longitude: location.long,
+        		    },
+        		    destination: {
+        		        latitude: SERVER_LOCATION.lat,
+        		        longitude: SERVER_LOCATION.lon,
+        		    },
+        		    options: {
+        		        strokeColor: randomColor({
+        		            luminosity: 'bright',
+        		            hue: 'yellow'
+        		        }),
+        		    }
+        		});
+        	}
+
+        	map.arc(arcData, {
+        	    strokeWidth: 1,
+        	    arcSharpness: 1.4,
+        	    strokeColor: 'rgba(102, 224, 255, 0.95)'
+        	});
+        	setTimeout(drawArcs, 2000);
+        })();
+    }
+    </script>
+  </head>
+
+  <body onload="initialize()">
+    <div id="map-canvas"></div>
+  </body>
+</html>

@@ -3,9 +3,9 @@ GeoIP-Scraper
 
 Turn your log files containing IP addresses into a pretty little represantation of traffic inflow like this:
 
-![](http://i.imgur.com/yf4NiPq.png)
-
 ![](https://i.imgur.com/kPuziwp.png)
+
+![](http://i.imgur.com/yf4NiPq.png)
 
 
 How To Use
